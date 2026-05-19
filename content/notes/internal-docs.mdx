@@ -1,0 +1,38 @@
+---
+title: Platform Architecture Notes
+date: 2026-05-14
+tags: ["architecture", "internal"]
+---
+
+# Platform Architecture Notes
+
+The Kranix control plane is structured in layers:
+
+```
+Developer / AI Agent
+        │
+   CLI or MCP
+        │
+   Kranix API
+        │
+  Kranix Core
+        │
+   ┌────┼────┐
+   ▼    ▼    ▼
+Docker  K8s  Remote Nodes
+```
+
+## Core Components
+
+- **Kranix Core** — reconciler, state store, event bus
+- **Runtime Drivers** — Docker, Kubernetes, Podman, remote nodes
+- **MCP Server** — AI agent tool surface with permission scopes
+- **GitOps Operator** — KranixApp, KranixPolicy, KranixSecret CRDs
+- **Kranix CLI** — `deploy`, `logs`, `analyze`, `diff`, `rollback`
+
+## Design Principles
+
+1. Every CLI action is available via the API
+2. Every API action is exposed as an MCP tool
+3. Git is always the source of truth for declared state
+4. Composable — use only the parts you need

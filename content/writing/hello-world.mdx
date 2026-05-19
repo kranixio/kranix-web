@@ -1,0 +1,61 @@
+---
+title: Getting Started with Kranix
+description: Deploy your first workload with the Kranix CLI — Docker locally or Kubernetes via Helm.
+date: 2026-05-14
+tags: ["getting-started", "cli", "deploy"]
+category: "Guides"
+---
+
+# Getting Started with Kranix
+
+Kranix is an open-source, AI-native control plane for Docker and Kubernetes. This guide walks through your first deploy.
+
+## Prerequisites
+
+- Docker or a running Kubernetes cluster (`kind` works for local)
+- Go 1.22+ (if building from source)
+- Helm 3.12+ (for cluster install)
+
+## Install the CLI
+
+```bash
+curl -fsSL https://get.kranix.io | sh
+```
+
+## Deploy to Docker
+
+```bash
+kranix login --server http://localhost:8080 --api-key your_key
+
+kranix deploy --name my-app --image nginx:latest --namespace default
+
+kranix status my-app
+
+kranix logs my-app --follow
+```
+
+## Deploy to Kubernetes
+
+```bash
+helm repo add kranix https://charts.kranix.io
+helm repo update
+
+helm install kranix kranix/kranix \
+  --namespace kranix-system \
+  --create-namespace
+
+kubectl get pods -n kranix-system
+```
+
+## Connect an AI agent (MCP)
+
+```bash
+KRANIX_API_URL=http://localhost:8080 \
+KRANIX_API_KEY=your_key \
+kranix-mcp start
+```
+
+Once connected, your AI agent can deploy workloads, stream logs, analyze failures, and roll back — all within audited boundaries.
+
+---
+*Ready to operate infrastructure with humans and AI agents alike.*
