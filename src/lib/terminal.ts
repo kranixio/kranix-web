@@ -1,3 +1,5 @@
+import { THEME_PRESET_IDS, type ThemePresetId } from '@/lib/themes'
+
 // ── Terminal Line Types ──
 const SPACES_REGEX = /\s+/
 const LEADING_SLASH_REGEX = /^\//
@@ -11,7 +13,7 @@ export interface TerminalLine {
 // ── Command Registry ──
 interface CommandContext {
   openTab: (id: string) => void
-  setThemePreset: (preset: 'graphite' | 'linen' | 'vesper' | 'nord' | 'catppuccin' | 'tokyo-night' | 'dracula' | 'github-dark') => void
+  setThemePreset: (preset: ThemePresetId) => void
   addLines: (lines: TerminalLine[]) => void
   clearLines: () => void
 }
@@ -57,7 +59,7 @@ const PANELS: { id: string, label: string }[] = [
   { id: 'settings', label: 'Settings' },
 ]
 
-const THEMES = ['graphite', 'linen', 'vesper', 'nord', 'catppuccin', 'tokyo-night', 'dracula', 'github-dark'] as const
+const THEMES = THEME_PRESET_IDS
 
 // ── Pet State ──
 const petState = {
@@ -189,7 +191,7 @@ const commands: Record<string, CommandHandler> = {
       return
     }
     if ((THEMES as readonly string[]).includes(target)) {
-      ctx.setThemePreset(target as typeof THEMES[number])
+      ctx.setThemePreset(target as ThemePresetId)
       ctx.addLines([createLine('system', `Theme switched to "${target}".`)])
     }
     else {

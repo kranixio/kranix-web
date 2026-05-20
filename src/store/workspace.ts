@@ -1,3 +1,5 @@
+import type { ThemePresetId } from '@/lib/themes'
+import { isThemePresetId } from '@/lib/themes'
 import { create } from 'zustand'
 
 export type PanelId = 'overview' | 'projects' | 'experiments' | 'writing' | 'gallery' | 'notes' | 'activity' | 'contact' | 'settings'
@@ -28,7 +30,7 @@ interface WorkspaceState {
   commandPaletteOpen: boolean
   sidebarWidth: number
   sidebarPosition: 'left' | 'right'
-  themePreset: 'graphite' | 'linen' | 'vesper' | 'nord' | 'catppuccin' | 'tokyo-night' | 'dracula' | 'github-dark'
+  themePreset: ThemePresetId
 
   openTab: (id: string) => void
   closeTab: (id: string) => void
@@ -41,7 +43,7 @@ interface WorkspaceState {
   toggleCommandPalette: () => void
   setCommandPaletteOpen: (open: boolean) => void
   setSidebarWidth: (w: number) => void
-  setThemePreset: (preset: 'graphite' | 'linen' | 'vesper' | 'nord' | 'catppuccin' | 'tokyo-night' | 'dracula' | 'github-dark') => void
+  setThemePreset: (preset: ThemePresetId) => void
   setOpenTabs: (tabs: string[]) => void
   closeAllTabs: () => void
   closeOtherTabs: (id: string) => void
@@ -57,9 +59,12 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   commandPaletteOpen: false,
   sidebarWidth: 220,
   sidebarPosition: 'left',
-  themePreset: (typeof window !== 'undefined'
-    ? localStorage.getItem('kranix-io-theme') as any
-    : null) || 'linen',
+  themePreset: (() => {
+    if (typeof window === 'undefined')
+      return 'linen' as ThemePresetId
+    const stored = localStorage.getItem('kranix-io-theme')
+    return stored && isThemePresetId(stored) ? stored : 'linen'
+  })(),
 
   openTab: (id) => {
     const { openTabs } = get()

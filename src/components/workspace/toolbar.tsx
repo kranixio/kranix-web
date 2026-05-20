@@ -11,6 +11,7 @@ import {
 import { useIsMobile } from '@/lib/use-mobile'
 import { useWorkspaceStore } from '@/store/workspace'
 import { SystemStatusGroup } from './system-status'
+import { ThemeToggle } from './theme-toggle'
 
 export function Toolbar() {
   const {
@@ -36,8 +37,9 @@ export function Toolbar() {
           <span className="text-muted-foreground">control-plane</span>
         </div>
 
-        {/* Right: Command Palette trigger + Theme */}
+        {/* Right: Theme + Command Palette */}
         <div className="flex items-center gap-1">
+          <ThemeToggle />
           <button
             id="mobile-command-palette-btn"
             onClick={toggleCommandPalette}
@@ -101,6 +103,7 @@ export function Toolbar() {
         <SystemStatusGroup />
         <div className="mx-1 h-4 w-px bg-os-border" />
         <div className="flex items-center gap-1">
+          <ThemeToggle />
           <button
             onClick={toggleSidebarPosition}
             className="flex size-7 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-os-accent-muted hover:text-foreground"
