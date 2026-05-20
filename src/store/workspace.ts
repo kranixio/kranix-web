@@ -51,8 +51,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   openTabs: ['overview'],
   sidebarOpen: true,
   bottomPanelOpen: typeof window !== 'undefined'
-    ? localStorage.getItem('kranix-io-terminal-open') !== 'false'
-    : true,
+    ? localStorage.getItem('kranix-io-terminal-open') === 'true'
+    : false,
   bottomPanelHeight: 200,
   commandPaletteOpen: false,
   sidebarWidth: 220,
