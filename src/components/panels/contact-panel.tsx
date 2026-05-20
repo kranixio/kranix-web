@@ -14,7 +14,7 @@ interface ContactLink {
 
 const CONTACT_LINKS: ContactLink[] = [
   { id: 'docs', label: 'Documentation', value: 'kranix.prodevopsguytech.com/writing', url: 'https://kranix.prodevopsguytech.com/writing', icon: EnvelopeIcon },
-  { id: 'github', label: 'GitHub', value: 'github.com/kranixio', url: 'https://github.com/kranixio', icon: GithubLogoIcon },
+  { id: 'github', label: 'GitHub', value: 'github.com/kranix-io', url: 'https://github.com/kranix-io', icon: GithubLogoIcon },
   { id: 'discussions', label: 'Discussions', value: 'github.com/kranixio/.github/discussions', url: 'https://github.com/kranixio/.github/discussions', icon: XLogoIcon },
   { id: 'install', label: 'Install CLI', value: 'get.kranix.io', url: 'https://get.kranix.io', icon: LinkedinLogoIcon },
 ]

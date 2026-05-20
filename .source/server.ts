@@ -1,4 +1,6 @@
 // @ts-nocheck
+import * as __fd_glob_3 from "../content/writing/kranix-core.mdx?collection=writing"
+import * as __fd_glob_2 from "../content/writing/kranix-api.mdx?collection=writing"
 import * as __fd_glob_1 from "../content/writing/hello-world.mdx?collection=writing"
 import * as __fd_glob_0 from "../content/notes/internal-docs.mdx?collection=notes"
 import { server } from 'fumadocs-mdx/runtime/server';
@@ -11,4 +13,4 @@ const create = server<typeof Config, import("fumadocs-mdx/runtime/types").Intern
 
 export const notes = await create.docs("notes", "content/notes", {}, {"internal-docs.mdx": __fd_glob_0, });
 
-export const writing = await create.docs("writing", "content/writing", {}, {"hello-world.mdx": __fd_glob_1, });
+export const writing = await create.docs("writing", "content/writing", {}, {"hello-world.mdx": __fd_glob_1, "kranix-api.mdx": __fd_glob_2, "kranix-core.mdx": __fd_glob_3, });

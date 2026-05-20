@@ -1,0 +1,59 @@
+---
+title: kranix-core — Orchestration Engine
+description: Reconciliation, scheduling, state management, and policy enforcement — the brain of the Kranix platform.
+date: 2026-05-19
+tags: ["core", "reconciler", "architecture"]
+category: "Platform"
+---
+
+# kranix-core
+
+> The orchestration engine — state, scheduling, and reconciliation for the Kranix platform.
+
+`kranix-core` owns all business logic. Nothing touches Docker or Kubernetes directly except through **kranix-runtime**, driven by core.
+
+## Architecture position
+
+```
+kranix-api  ──►  kranix-core  ──►  kranix-runtime
+                    │
+                    ├──►  kranix-operator
+                    └──►  kranix-packages
+```
+
+## Reconciliation loop
+
+```
+Observe  →  Compare to desired  →  Diff  →  Apply  →  repeat
+```
+
+Desired state merges from **Git** (`KranixApp` CRDs), **API** (`POST /deploy`), and **AI** (MCP agent actions).
+
+## Workload capabilities
+
+- **Cron scheduling** — standard five-field cron, optional timezone, concurrency policies
+- **Priority & preemption** — `critical` | `high` | `normal` | `low` scheduling tiers
+- **Resource quotas** — per-namespace or per-team hard limits on CPU, memory, workload count
+- **Drift detection** — alerts when runtime diverges from declared spec
+- **Event sourcing** — immutable log of every state transition
+- **Health gates** — block rollouts until HTTP/TCP/Prometheus checks pass
+- **Circuit breaker & warm standby** — failover to a linked standby workload
+- **Rollback history** — versioned spec snapshots for instant revert
+
+## Event bus
+
+Internal components communicate via typed events, for example:
+
+```
+WorkloadDeployRequested → WorkloadScheduled → WorkloadRunning | WorkloadFailed
+```
+
+## Run locally
+
+```bash
+git clone https://github.com/kranix-io/kranix-core
+cd kranix-core
+go run ./cmd/core --config ./config/local.yaml
+```
+
+Repository: [github.com/kranix-io/kranix-core](https://github.com/kranix-io/kranix-core)

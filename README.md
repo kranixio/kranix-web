@@ -8,7 +8,11 @@
 
 Official website and developer workspace UI for [Kranix IO](https://kranix.prodevopsguytech.com) — an open-source, AI-native control plane for Docker and Kubernetes.
 
-Built as an IDE-inspired workspace: panel navigation, explorer sidebar, integrated terminal, command palette, and MDX-powered docs — without changing the underlying UI shell from the original template.
+Built as an IDE-inspired workspace: panel navigation, explorer sidebar, integrated terminal, command palette, and MDX-powered docs.
+
+**Live site:** [https://kranix.prodevopsguytech.com](https://kranix.prodevopsguytech.com)
+
+---
 
 ## About Kranix IO
 
@@ -18,9 +22,184 @@ Kranix gives you a single interface to deploy, manage, debug, and heal container
 - **GitOps-native** — `KranixApp` manifests reconciled from Git
 - **Multi-backend** — Docker, Kubernetes, Podman, and remote nodes
 
-Learn more on the main project: [github.com/kranixio](https://github.com/kranixio) · [Documentation](https://kranix.prodevopsguytech.com/writing) · [Discussions](https://github.com/kranixio/.github/discussions)
+Learn more: [github.com/kranix-io](https://github.com/kranix-io) · [Documentation](https://kranix.prodevopsguytech.com/writing) · [Discussions](https://github.com/kranix-io/.github/discussions)
 
-## Tech stack
+---
+
+## Kranix ecosystem
+
+Kranix is split into focused repositories. Each layer has a single responsibility; nothing touches infrastructure except through the stack below.
+
+```
+kranix-cli  ──┐
+kranix-mcp  ──┼──►  kranix-api  ──►  kranix-core  ──►  kranix-runtime
+             │              │              │
+             │              │              ├──►  kranix-operator
+             │              │              └──►  kranix-packages (shared types)
+             │              │
+kranix-web  ─┘         (this repo — docs & portal UI)
+```
+
+| Repository | Role |
+|------------|------|
+| [kranix-core](https://github.com/kranix-io/kranix-core) | Orchestration engine — reconciliation, scheduling, state, events |
+| [kranix-api](https://github.com/kranix-io/kranix-api) | REST / gRPC front door — auth, validation, streaming |
+| [kranix-runtime](https://github.com/kranix-io/kranix-runtime) | Docker / Kubernetes / remote node drivers |
+| [kranix-operator](https://github.com/kranix-io/kranix-operator) | GitOps operator — `KranixApp`, `KranixPolicy`, `KranixSecret` CRDs |
+| [kranix-cli](https://github.com/kranix-io/kranix-cli) | Human-facing CLI — deploy, logs, analyze, diff, rollback |
+| [kranix-mcp](https://github.com/kranix-io/kranix-mcp) | MCP server for AI agents |
+| [kranix-packages](https://github.com/kranix-io/kranix-packages) | Shared Go types, errors, mock API |
+| **kranix-web** | This repo — marketing site and workspace UI |
+
+---
+
+## kranix-core
+
+> The orchestration engine — state, scheduling, and reconciliation for the Kranix platform.
+
+`kranix-core` is the brain of the ecosystem. It owns all business logic: reconciliation loops, workload scheduling, state management, event routing, and policy enforcement. Every other repo either sends work *into* core or gets driven *by* core.
+
+### Responsibilities
+
+- Maintains **desired vs actual state** for all managed workloads
+- Runs continuous **reconciliation** (Git intent → runtime state)
+- Schedules deployments across backends via **kranix-runtime**
+- Routes events between API and runtime drivers on a typed **event bus**
+- Enforces policies: resource limits, namespace isolation, rollout rules, workload priority, cron gates, aggregate quotas
+- Supports **drift detection**, **event sourcing**, **health gates**, **circuit breakers**, and **warm standby**
+
+### Reconciliation loop
+
+```
+Observe current state  →  Compare to desired  →  Compute diff  →  Apply  →  repeat
+```
+
+Desired state is merged from three sources:
+
+| Source | Examples |
+|--------|----------|
+| Git manifests | `KranixApp` CRDs in a repo |
+| API intent | `POST /deploy` from CLI or MCP |
+| AI intent | Agent actions via kranix-mcp |
+
+### Workload model (high level)
+
+Every managed unit is a `Workload` with `spec`, `status`, and immutable `history`. Notable spec areas:
+
+- **Cron** — five-field schedule, timezone, concurrency policy (`allow` / `forbid` / `replace`)
+- **Scheduling** — `workload_priority` (`critical` \| `high` \| `normal` \| `low`), spot/preemption hints
+- **Quotas** — hard aggregate CPU/memory/workload limits per namespace or team (`kranix.io/team`)
+- **Cross-namespace traffic** — peer namespace allow lists for NetworkPolicy
+- **Rollback history** — versioned spec snapshots for instant revert
+- **Circuit breaker & warm standby** — open circuit can auto-promote a linked standby workload
+- **Secret rotation** — dependents marked `pending_restart` when secrets rotate
+
+### Event flow (example)
+
+```
+API receives request
+  → WorkloadDeployRequested
+    → WorkloadScheduled
+      → Runtime executes
+        → WorkloadRunning / WorkloadFailed
+```
+
+### Run locally
+
+```bash
+git clone https://github.com/kranix-io/kranix-core
+cd kranix-core
+go mod download
+go run ./cmd/core --config ./config/local.yaml
+```
+
+---
+
+## kranix-api
+
+> REST / gRPC interface — the unified entry point for all Kranix clients.
+
+`kranix-api` is intentionally **thin**: no scheduling or policy logic lives here. It authenticates clients, validates requests, and delegates to **kranix-core**.
+
+```
+kranix-cli  ──┐
+kranix-mcp  ──┼──►  kranix-api  ──►  kranix-core
+```
+
+### Responsibilities
+
+- Versioned **REST** (`/api/v1/...`) and **gRPC**
+- **Authentication** — API keys (`krane_...`), JWT, OIDC
+- Request validation — cron, GPU, cross-namespace traffic, workload priority
+- **SSE / gRPC streams** for logs and live events
+- **Audit logs** for every mutating action
+- **Rate limiting** and namespace quotas
+- **Dry-run** — `?dryRun=true` previews changes without applying
+- **Cursor pagination**, bulk ops, workload diff, changelog breaking-change notifications
+
+### Base URL (local)
+
+```
+http://localhost:8080/api/v1
+```
+
+### Key endpoints
+
+| Area | Examples |
+|------|----------|
+| Workloads | `POST /workloads`, `GET /workloads`, `PATCH /workloads/:id`, `POST /workloads/:id/restart` |
+| Pods | `GET /workloads/:id/pods`, `GET /pods/:id/logs` (SSE) |
+| Analysis | `GET /workloads/:id/analyze`, `POST /manifests/generate` |
+| Quotas | `GET/PUT /api/v1/quotas/{namespace}`, usage endpoints |
+| Streaming | `GET /api/sse` — live workload events |
+| Audit | `GET /api/v1/audit`, resource history merged with core event sourcing |
+| Bulk | `POST /api/v1/workloads/bulk` — deploy / restart / delete in one call |
+
+### Authentication
+
+```http
+Authorization: Bearer <token>
+```
+
+| Type | Use case |
+|------|----------|
+| API key (`krane_...`) | CI/CD, service accounts |
+| JWT | Human users via kranix-cli |
+| OIDC | SSO / enterprise IdP |
+
+Optional **IP allowlist** on API keys (`allowedIps` at creation time).
+
+### Run locally
+
+```bash
+git clone https://github.com/kranix-io/kranix-api
+cd kranix-api
+go mod download
+go run ./cmd/api --config ./config/local.yaml
+```
+
+### Mock API (no core required)
+
+For **kranix-web**, CLI, or MCP client development:
+
+```bash
+cd ../kranix-packages
+go run ./cmd/kranix-mock-api -addr :18080 -skip-auth=true
+```
+
+Point clients at `http://localhost:18080`.
+
+---
+
+## This repository (kranix-web)
+
+`kranix-web` is **not** part of the runtime control plane. It is the public face of the project:
+
+- Workspace UI (overview, projects, experiments, writing, notes, gallery, activity, contact)
+- MDX documentation served under `/writing` and `/notes`
+- SEO metadata, sitemap, and PWA manifest for [kranix.prodevopsguytech.com](https://kranix.prodevopsguytech.com)
+
+### Tech stack (this repo)
 
 | Layer | Tools |
 |--------|--------|
@@ -31,28 +210,21 @@ Learn more on the main project: [github.com/kranixio](https://github.com/kranixi
 | Motion | [Motion](https://motion.dev/) |
 | Icons | [Phosphor Icons](https://phosphoricons.com/) |
 
-## Prerequisites
+### Prerequisites
 
 - [Node.js](https://nodejs.org/) 20+
 - [pnpm](https://pnpm.io/) 9+
 
-## Getting started
+### Getting started
 
 ```bash
-# Clone the repository
-git clone https://github.com/kranixio/kranix-web.git
+git clone https://github.com/kranix-io/kranix-web.git
 cd kranix-web
-
-# Install dependencies
 pnpm install
-
-# Start the development server
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### Other commands
+Open [http://localhost:3000](http://localhost:3000).
 
 ```bash
 pnpm build      # Production build
@@ -61,83 +233,78 @@ pnpm lint       # Run ESLint
 pnpm lint:fix   # Auto-fix lint issues
 ```
 
-## Project structure
+### Project structure
 
 ```
 kranix-web/
-├── content/              # MDX content (Fumadocs)
-│   ├── writing/          # Guides and documentation posts
-│   └── notes/            # Architecture and internal notes
-├── public/               # Static assets (fonts, favicons, OG image)
+├── content/
+│   ├── writing/          # Guides (Fumadocs MDX)
+│   └── notes/            # Architecture notes
+├── public/               # sitebanner.png, fonts, favicons
 ├── src/
-│   ├── app/              # Next.js App Router pages and metadata
-│   ├── components/
-│   │   ├── panels/       # Workspace panels (overview, projects, etc.)
-│   │   ├── ui/           # Shared UI primitives
-│   │   └── workspace/    # Shell: toolbar, sidebar, terminal, tabs
-│   ├── lib/              # Terminal commands, articles, utilities
-│   └── store/            # Workspace state (Zustand)
-├── source.config.ts      # Fumadocs MDX configuration
-└── next.config.ts
+│   ├── app/              # Next.js routes & metadata
+│   ├── components/panels/
+│   └── components/workspace/
+└── source.config.ts
 ```
 
-## Workspace panels
+### Workspace panels
 
-| Route | Panel | Purpose |
-|-------|--------|---------|
-| `/overview` | Overview | Platform dashboard and quick access |
-| `/projects` | Projects | Kranix modules (Core, MCP, CLI, operator, drivers) |
-| `/experiments` | Experiments | Roadmap and research log |
-| `/writing` | Writing | MDX documentation |
-| `/notes` | Notes | Internal architecture notes |
-| `/gallery` | Gallery | Architecture and platform visuals |
-| `/activity` | Activity | Development activity feed |
-| `/contact` | Contact | Links to docs, GitHub, discussions, CLI install |
-| `/settings` | Settings | Theme and layout preferences |
-
-### Keyboard shortcuts
+| Route | Purpose |
+|-------|---------|
+| `/overview` | Platform dashboard |
+| `/projects` | Ecosystem repos (core, api, cli, mcp, …) |
+| `/experiments` | Roadmap & research |
+| `/writing` | MDX docs |
+| `/notes` | Internal architecture |
+| `/gallery` | Diagrams & visuals |
+| `/activity` | Dev activity feed |
+| `/contact` | Links & install |
 
 | Shortcut | Action |
 |----------|--------|
-| `⌘K` / `Ctrl+K` | Open command palette |
-| Terminal | Type `help` in the bottom panel for commands |
+| `⌘K` / `Ctrl+K` | Command palette |
+| Terminal `help` | Built-in shell commands |
 
-## Adding content
+### Adding documentation
 
-Documentation lives in `content/writing/` and notes in `content/notes/` as MDX files with frontmatter:
+Add MDX under `content/writing/`:
 
 ```mdx
 ---
 title: My Guide
-description: Short summary for SEO and cards
+description: Short summary
 date: 2026-05-19
-tags: ["cli", "deploy"]
-category: "Guides"
+tags: ["api", "core"]
+category: "Platform"
 ---
-
-# Page content here
 ```
 
-After adding or editing MDX files, restart the dev server if new routes do not appear (Fumadocs regenerates the `.source/` types on build).
-
-## Environment
-
-Optional environment variables:
-
-| Variable | Description |
-|----------|-------------|
-| `NEXT_PUBLIC_APP_VERSION` | Set automatically from `package.json` via `next.config.ts` |
-
-## Deployment
-
-The app is a standard Next.js application. Build and deploy to any host that supports Next.js (Vercel, Docker, static export if configured, etc.):
+### Deployment
 
 ```bash
 pnpm build
 pnpm start
 ```
 
-Update `metadataBase` in `src/app/layout.tsx` and URLs in `src/app/sitemap.ts` / `src/app/robots.ts` for your production domain.
+Production URLs are configured in `src/app/layout.tsx`, `src/app/sitemap.ts`, and `src/app/robots.ts` (`https://kranix.prodevopsguytech.com`).
+
+### Environment
+
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_APP_VERSION` | From `package.json` via `next.config.ts` |
+
+---
+
+## Design principles (platform-wide)
+
+1. Every **CLI** action is available via the **API**
+2. Every **API** action can be exposed as an **MCP** tool
+3. **Git** is the source of truth for declared state (with API/AI overlay)
+4. **Composable** — use only the layers you need (MCP standalone, drivers without K8s, etc.)
+
+---
 
 ## License
 

@@ -1,38 +1,50 @@
 ---
-title: Platform Architecture Notes
-date: 2026-05-14
-tags: ["architecture", "internal"]
+title: Ecosystem Architecture
+date: 2026-05-19
+tags: ["architecture", "ecosystem"]
 ---
 
-# Platform Architecture Notes
+# Ecosystem Architecture
 
-The Kranix control plane is structured in layers:
+## Full stack
 
 ```
 Developer / AI Agent
         │
-   CLI or MCP
+   kranix-cli  |  kranix-mcp
         │
-   Kranix API
+   kranix-api          ← REST/gRPC, auth, audit, SSE
         │
-  Kranix Core
+   kranix-core         ← reconcile, schedule, policy, events
         │
-   ┌────┼────┐
-   ▼    ▼    ▼
-Docker  K8s  Remote Nodes
+   ┌────┼────────────┐
+   ▼    ▼            ▼
+runtime  operator   packages
+   │
+Docker · K8s · Remote nodes
 ```
 
-## Core Components
+## Layer responsibilities
 
-- **Kranix Core** — reconciler, state store, event bus
-- **Runtime Drivers** — Docker, Kubernetes, Podman, remote nodes
-- **MCP Server** — AI agent tool surface with permission scopes
-- **GitOps Operator** — KranixApp, KranixPolicy, KranixSecret CRDs
-- **Kranix CLI** — `deploy`, `logs`, `analyze`, `diff`, `rollback`
+| Layer | Repo | Does |
+|-------|------|------|
+| Portal | kranix-web | This site — docs & workspace UI |
+| Clients | kranix-cli, kranix-mcp | Humans and AI agents |
+| API | kranix-api | Front door — no business logic |
+| Core | kranix-core | Brain — reconciliation & state |
+| Runtime | kranix-runtime | Infra drivers |
+| GitOps | kranix-operator | CRD reconciliation from Git |
+| Shared | kranix-packages | Types, mock API |
 
-## Design Principles
+## Desired state sources (core)
 
-1. Every CLI action is available via the API
-2. Every API action is exposed as an MCP tool
-3. Git is always the source of truth for declared state
-4. Composable — use only the parts you need
+1. Git — `KranixApp` manifests
+2. API — deploy/update from CLI
+3. AI — MCP tool calls (audited, scoped)
+
+## Design principles
+
+1. CLI ≡ API ≡ MCP (same capabilities, different surfaces)
+2. Git is source of truth for declared workloads
+3. Core never speaks HTTP; API never schedules workloads
+4. Composable — run MCP-only or drivers without full K8s stack

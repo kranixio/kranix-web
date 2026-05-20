@@ -177,7 +177,7 @@ export function OverviewPanel({ recentWritings = [] }: OverviewPanelProps) {
             <h1 className="font-heading text-lg font-bold tracking-tight">workspace://overview</h1>
           </div>
           <p className="font-mono text-xs text-muted-foreground">
-            Open-source infrastructure runtime for containers and clusters. Deploy, orchestrate, and operate — for humans and AI agents alike.
+            Open-source control plane for containers and clusters. CLI and MCP clients call kranix-api; core reconciles intent against Docker, Kubernetes, and remote runtimes.
           </p>
         </div>
 

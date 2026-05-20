@@ -1,0 +1,73 @@
+---
+title: kranix-api — REST & gRPC Gateway
+description: The unified API entry point for CLI, MCP, and third-party clients. Auth, validation, streaming, audit.
+date: 2026-05-19
+tags: ["api", "rest", "grpc"]
+category: "Platform"
+---
+
+# kranix-api
+
+> REST / gRPC interface — the unified entry point for all Kranix clients.
+
+`kranix-api` is **thin by design**. Scheduling and policy belong in **kranix-core**.
+
+## Architecture position
+
+```
+kranix-cli  ──┐
+kranix-mcp  ──┼──►  kranix-api  ──►  kranix-core
+```
+
+## What it provides
+
+- Versioned REST (`/api/v1`) and gRPC
+- **Authentication** — API keys, JWT, OIDC
+- Validation for cron, GPU, cross-namespace traffic, workload priority
+- **SSE streams** for logs and live events
+- **Audit trail** for mutating operations
+- **Dry-run** — `?dryRun=true` previews without applying
+- **Bulk operations**, cursor pagination, workload diff
+- Rate limiting and namespace quota APIs
+
+## Example endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/workloads` | Deploy a workload |
+| `GET` | `/workloads` | List (supports `all_namespaces=true`) |
+| `GET` | `/workloads/:id/analyze` | AI-powered failure analysis |
+| `GET` | `/pods/:id/logs` | Stream logs (SSE) |
+| `POST` | `/workloads/bulk` | Bulk deploy / restart / delete |
+| `GET` | `/api/sse` | Live platform events |
+
+## Authentication
+
+```http
+Authorization: Bearer <token>
+```
+
+| Type | Use case |
+|------|----------|
+| API key (`krane_...`) | CI/CD, automation |
+| JWT | kranix-cli users |
+| OIDC | Enterprise SSO |
+
+## Local development
+
+```bash
+git clone https://github.com/kranix-io/kranix-api
+cd kranix-api
+go run ./cmd/api --config ./config/local.yaml
+```
+
+### Mock API (no core)
+
+```bash
+cd ../kranix-packages
+go run ./cmd/kranix-mock-api -addr :18080 -skip-auth=true
+```
+
+OpenAPI spec: `http://localhost:8080/openapi.json` · Docs UI: `http://localhost:8080/docs`
+
+Repository: [github.com/kranix-io/kranix-api](https://github.com/kranix-io/kranix-api)

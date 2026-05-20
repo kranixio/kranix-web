@@ -15,7 +15,7 @@ interface GalleryItem {
 }
 
 const GALLERY_ITEMS: GalleryItem[] = [
-  { id: 'g1', title: 'Control Plane Architecture', description: 'Developer / AI Agent → CLI or MCP → Kranix API → Core → Docker / K8s / Remote', category: 'Architecture', color: 'from-emerald-900/80 to-emerald-600/40', aspect: 'landscape' },
+  { id: 'g1', title: 'Ecosystem Stack', description: 'cli/mcp → kranix-api → kranix-core → runtime / operator / packages', category: 'Architecture', color: 'from-emerald-900/80 to-emerald-600/40', aspect: 'landscape' },
   { id: 'g2', title: 'MCP Tool Surface', description: 'Deploy, logs, analyze, heal, and manifest generation exposed to AI agents', category: 'MCP', color: 'from-blue-900/80 to-cyan-600/40', aspect: 'square' },
   { id: 'g3', title: 'KranixApp Manifest', description: 'GitOps-native workload declaration as a Kubernetes CRD', category: 'GitOps', color: 'from-purple-900/80 to-pink-600/40', aspect: 'portrait' },
   { id: 'g4', title: 'TUI Live Dashboard', description: 'Real-time cluster state in the terminal via kranix status', category: 'CLI', color: 'from-amber-900/80 to-orange-600/40', aspect: 'landscape' },
