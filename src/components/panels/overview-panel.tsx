@@ -190,7 +190,7 @@ export function OverviewPanel({ recentWritings = [] }: OverviewPanelProps) {
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <StatusBadge label="reconcile" value="active" color="bg-emerald-400" />
-            <StatusBadge label="backends" value="3" color="bg-blue-400" />
+            <StatusBadge label="repos" value="10" color="bg-blue-400" />
             <StatusBadge label="mcp tools" value="12+" color="bg-amber-400" />
             <StatusBadge label="license" value="Apache 2.0" color="bg-purple-400" />
           </div>

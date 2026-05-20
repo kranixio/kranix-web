@@ -1,0 +1,53 @@
+---
+title: kranix-packages — Shared SDK
+description: Domain types, RuntimeDriver interface, SDKs (Go/TS/Python/Rust), and kranix-mock-api for the ecosystem.
+date: 2026-05-19
+tags: ["sdk", "types", "shared"]
+category: "Platform"
+---
+
+# kranix-packages
+
+> Shared SDK — types, utilities, and client libraries for the Kranix ecosystem.
+
+Every Kranix repo imports **kranix-packages** for shared types and contracts. No business logic lives here — only definitions every layer agrees on.
+
+## Architecture
+
+```
+kranix-core, api, mcp, cli, runtime  →  kranix-packages
+Third-party tools                    →  SDKs + mock API
+```
+
+Dependency arrows always point **into** packages, never out.
+
+## Packages
+
+| Package | Description |
+|---------|-------------|
+| `types` | Workload, Pod, Namespace, Status, quotas, cron |
+| `runtime` | `RuntimeDriver` interface |
+| `errors` | Typed error codes |
+| `auth` | Tokens, RBAC, OIDC helpers |
+| `config` | Config schemas and loader |
+| `sdk/go`, `sdk/typescript`, `sdk/python`, `sdk/rust` | Public API clients |
+| `cmd/kranix-mock-api` | In-memory API + SSE for tests |
+
+## Workload phases
+
+```
+Pending → Deploying → Running | Degraded | Failed
+```
+
+## Mock API (local dev)
+
+Run without kranix-core for **kranix-web**, CLI, or MCP client development:
+
+```bash
+cd kranix-packages
+go run ./cmd/kranix-mock-api -addr :18080 -skip-auth=true
+```
+
+Point clients at `http://localhost:18080`.
+
+Repository: [github.com/kranix-io/kranix-packages](https://github.com/kranix-io/kranix-packages)

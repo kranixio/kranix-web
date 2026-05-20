@@ -1,0 +1,79 @@
+---
+title: kranix-mcp — AI Agent Interface
+description: MCP server exposing deploy, logs, analyze, healing, and runbooks to Claude, GPT, and custom agents.
+date: 2026-05-19
+tags: ["mcp", "ai", "agents"]
+category: "Guides"
+---
+
+# kranix-mcp
+
+> MCP server — expose Kranix to Claude, GPT, and any MCP-compatible AI agent.
+
+`kranix-mcp` translates MCP tool calls into authenticated **kranix-api** requests. It is the AI-native layer of the platform — agents deploy workloads, stream logs, analyze failures, and run incident runbooks within audited, scoped boundaries.
+
+## Architecture
+
+```
+AI agents  →  MCP protocol  →  kranix-mcp  →  kranix-api  →  kranix-core
+```
+
+No direct Docker or Kubernetes access — only the API.
+
+## Core MCP tools
+
+| Tool | Description |
+|------|-------------|
+| `deploy_workload` | Deploy from image or manifest |
+| `list_workloads` / `get_workload` | Inspect workloads |
+| `stream_logs` | Pod log tail |
+| `analyze_workload` | AI failure analysis |
+| `generate_manifest` | Manifest from natural language |
+| `get_cluster_health` | Cluster-wide health summary |
+| `natural_language_deploy` | e.g. "deploy api-server v2 to prod with 5 replicas" |
+
+## Safety boundaries
+
+Agents **cannot** (by design):
+
+- Delete or modify namespaces
+- Change cluster RBAC or service accounts
+- Exec into containers
+- Read secrets directly
+- Perform unscoped bulk deletes
+
+## Advanced capabilities
+
+- **Dry-run mode** — preview agent actions before apply
+- **Autonomous healing** — observe or auto-fix degraded workloads
+- **Multi-agent coordination** — task delegation between agents
+- **Incident runbooks** — execute and track automated responses
+- **Per-agent audit log** — every tool call recorded with identity
+- **Scheduled agent tasks** — cron-driven agent workflows
+
+## Claude Desktop
+
+```json
+{
+  "mcpServers": {
+    "kranix": {
+      "command": "kranix-mcp",
+      "args": ["start"],
+      "env": {
+        "KRANIX_API_URL": "http://localhost:8080",
+        "KRANIX_API_KEY": "krane_your_key"
+      }
+    }
+  }
+}
+```
+
+## Run locally
+
+```bash
+KRANIX_API_URL=http://localhost:8080 \
+KRANIX_API_KEY=your_key \
+kranix-mcp start
+```
+
+Repository: [github.com/kranix-io/kranix-mcp](https://github.com/kranix-io/kranix-mcp)

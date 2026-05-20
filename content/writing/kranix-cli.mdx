@@ -1,0 +1,70 @@
+---
+title: kranix-cli — Terminal UX
+description: Deploy, inspect, stream logs, and debug infrastructure from the shell. Pure API client over kranix-api.
+date: 2026-05-19
+tags: ["cli", "terminal", "developer-experience"]
+category: "Guides"
+---
+
+# kranix-cli
+
+> Terminal UX — deploy, inspect, and debug your infrastructure from the shell.
+
+`kranix-cli` is the primary human interface to Kranix. It wraps **kranix-api** with fast commands, real-time streaming, and multi-context profiles. All business logic stays in core — the CLI handles parsing, formatting, and UX only.
+
+## Architecture
+
+```
+Developer (terminal)  →  kranix-cli  →  kranix-api  →  kranix-core
+```
+
+## Installation
+
+```bash
+# Homebrew
+brew install kranix-io/tap/kranix
+
+# curl installer
+curl -fsSL https://get.kranix.io | sh
+
+# Go install
+go install github.com/kranix-io/kranix-cli/cmd/kranix@latest
+```
+
+## Quick start
+
+```bash
+kranix login --server http://localhost:8080 --api-key krane_your_key
+
+kranix deploy --name my-app --image nginx:latest --namespace default
+
+kranix status my-app
+
+kranix logs my-app --follow
+
+kranix analyze my-app
+```
+
+## Key commands
+
+| Command | Purpose |
+|---------|---------|
+| `kranix login` | Authenticate (API key, JWT, or OIDC) |
+| `kranix deploy` | Deploy a workload |
+| `kranix logs` | Stream or tail pod logs |
+| `kranix analyze` | AI-powered failure analysis + patch hints |
+| `kranix restart` / `delete` | Lifecycle operations |
+| `kranix namespace` | Create, list, delete namespaces |
+| `kranix manifests generate` | Generate manifests from plain text |
+| `kranix context` | Dev / staging / prod profiles |
+| `kranix doctor` | Diagnose config and API connectivity |
+
+## Output modes
+
+- Human-readable tables (default)
+- `--json` / `--yaml` for scripting
+- Shell completion for **bash**, **zsh**, and **fish**
+
+Config is stored in `~/.kranix/config`.
+
+Repository: [github.com/kranix-io/kranix-cli](https://github.com/kranix-io/kranix-cli)

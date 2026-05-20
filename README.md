@@ -48,8 +48,12 @@ kranix-web  ─┘         (this repo — docs & portal UI)
 | [kranix-operator](https://github.com/kranix-io/kranix-operator) | GitOps operator — `KranixApp`, `KranixPolicy`, `KranixSecret` CRDs |
 | [kranix-cli](https://github.com/kranix-io/kranix-cli) | Human-facing CLI — deploy, logs, analyze, diff, rollback |
 | [kranix-mcp](https://github.com/kranix-io/kranix-mcp) | MCP server for AI agents |
-| [kranix-packages](https://github.com/kranix-io/kranix-packages) | Shared Go types, errors, mock API |
-| **kranix-web** | This repo — marketing site and workspace UI |
+| [kranix-packages](https://github.com/kranix-io/kranix-packages) | Shared types, SDKs (Go/TS/Python/Rust), mock API |
+| [kranix-charts](https://github.com/kranix-io/kranix-charts) | Helm charts — install full platform on Kubernetes |
+| [kranix-examples](https://github.com/kranix-io/kranix-examples) | Quickstarts, AI agent samples, GitOps, reference architectures |
+| **kranix-web** | This repo — docs portal and workspace UI |
+
+Full docs for each layer live on the site under **Writing** (`/writing/kranix-*`) or in each repo’s README.
 
 ---
 
@@ -191,6 +195,119 @@ Point clients at `http://localhost:18080`.
 
 ---
 
+## kranix-runtime
+
+> Infrastructure drivers — Docker, Kubernetes, Podman, Compose, remote nodes.
+
+Driven only by **kranix-core**. Implements `RuntimeDriver` from kranix-packages. Maps cron → CronJob, priority → PriorityClass, spot tolerations, and cross-namespace NetworkPolicy on Kubernetes.
+
+| Backend | Status |
+|---------|--------|
+| Docker | Stable |
+| Kubernetes | Stable |
+| Podman / Compose | Stable |
+| Remote SSH | Beta |
+
+[github.com/kranix-io/kranix-runtime](https://github.com/kranix-io/kranix-runtime)
+
+---
+
+## kranix-operator
+
+> GitOps bridge — `KranixApp`, `KranixPolicy`, `KranixPipeline`, `KranixSecret`, `KranixDriftAlert` CRDs.
+
+Watches CRDs in-cluster, forwards to core, writes status back to `.status`. Supports canary/blue-green, federation, secret sync (Vault/AWS/Azure), drift alerts, and admission webhooks.
+
+```yaml
+apiVersion: kranix.io/v1alpha1
+kind: KranixApp
+metadata:
+  name: api-server
+spec:
+  image: myorg/api:v1.4.2
+  replicas: 3
+```
+
+[github.com/kranix-io/kranix-operator](https://github.com/kranix-io/kranix-operator)
+
+---
+
+## kranix-cli
+
+> Human terminal UX — pure API client.
+
+```bash
+kranix login --server http://localhost:8080 --api-key krane_...
+kranix deploy --name my-app --image nginx:latest
+kranix logs my-app --follow
+kranix analyze my-app
+kranix context profile switch staging
+```
+
+Install: `brew install kranix-io/tap/kranix` or `curl -fsSL https://get.kranix.io | sh`
+
+[github.com/kranix-io/kranix-cli](https://github.com/kranix-io/kranix-cli)
+
+---
+
+## kranix-mcp
+
+> MCP server for AI agents (Claude, GPT, custom).
+
+Exposes `deploy_workload`, `stream_logs`, `analyze_workload`, `natural_language_deploy`, dry-run, healing, runbooks, multi-agent tasks, and per-agent audit. Agents cannot modify namespaces, RBAC, or read secrets directly.
+
+```bash
+KRANIX_API_URL=http://localhost:8080 KRANIX_API_KEY=... kranix-mcp start
+```
+
+[github.com/kranix-io/kranix-mcp](https://github.com/kranix-io/kranix-mcp)
+
+---
+
+## kranix-packages
+
+> Shared SDK — types, `RuntimeDriver` interface, auth, errors, multi-language clients.
+
+No business logic. Includes `kranix-mock-api` for local testing. All repos depend on packages; packages depend on nothing else in the ecosystem.
+
+[github.com/kranix-io/kranix-packages](https://github.com/kranix-io/kranix-packages)
+
+---
+
+## kranix-charts
+
+> Helm — one-command platform install on Kubernetes.
+
+```bash
+helm repo add kranix https://charts.kranix.io
+helm install kranix kranix/kranix -n kranix-system --create-namespace
+```
+
+Umbrella chart: core + api + operator + optional MCP + CRDs + RBAC. Standalone sub-charts available.
+
+[github.com/kranix-io/kranix-charts](https://github.com/kranix-io/kranix-charts)
+
+---
+
+## kranix-examples
+
+> Runnable examples — quickstart → production blueprints.
+
+| Path | Use case |
+|------|----------|
+| `quickstart/docker-hello-world` | First deploy without Kubernetes |
+| `ai-agents/claude-deploy-app` | MCP + Claude |
+| `gitops/single-app-gitops` | KranixApp GitOps loop |
+| `reference-architectures/microservices-platform` | Full platform pattern |
+
+```bash
+git clone https://github.com/kranix-io/kranix-examples
+```
+
+[github.com/kranix-io/kranix-examples](https://github.com/kranix-io/kranix-examples)
+
+---
+
 ## This repository (kranix-web)
 
 `kranix-web` is **not** part of the runtime control plane. It is the public face of the project:
@@ -253,7 +370,7 @@ kranix-web/
 | Route | Purpose |
 |-------|---------|
 | `/overview` | Platform dashboard |
-| `/projects` | Ecosystem repos (core, api, cli, mcp, …) |
+| `/projects` | All 10 ecosystem repos (core, api, runtime, operator, cli, mcp, packages, charts, examples, web) |
 | `/experiments` | Roadmap & research |
 | `/writing` | MDX docs |
 | `/notes` | Internal architecture |

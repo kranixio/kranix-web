@@ -1,0 +1,65 @@
+---
+title: kranix-operator — GitOps on Kubernetes
+description: Kubernetes operator for KranixApp, KranixPolicy, KranixSecret CRDs. Commit YAML; the operator reconciles.
+date: 2026-05-19
+tags: ["gitops", "kubernetes", "crd"]
+category: "GitOps"
+---
+
+# kranix-operator
+
+> Kubernetes operator — GitOps-native cluster reconciliation via custom resources.
+
+`kranix-operator` runs in-cluster as a controller-runtime operator. Apply a `KranixApp` to the API server — the operator translates CRD changes into **kranix-core** operations. Git stays the source of truth.
+
+## Architecture
+
+```
+Git repo  →  kubectl apply  →  Kubernetes API  →  kranix-operator  →  kranix-core  →  kranix-runtime
+```
+
+## CRDs
+
+| CRD | Purpose |
+|-----|---------|
+| `KranixApp` | Primary workload declaration |
+| `KranixNamespace` | Namespace provisioning |
+| `KranixPolicy` | Resource limits, network rules |
+| `KranixPipeline` | Multi-stage deployment pipelines |
+| `KranixSecret` | Sync from Vault, AWS SM, Azure Key Vault |
+| `KranixDriftAlert` | Drift detection alerts |
+
+## KranixApp capabilities
+
+- Rolling, canary, and blue-green rollouts
+- Auto-heal and health gate paths
+- GPU resources, progressive delivery metrics
+- Optional `cronSchedule`, `scheduling` (priority, spot), `crossNamespaceTraffic`
+- Multi-cluster **federation** and dependency ordering
+- Secret sync and admission webhooks
+
+## Example (minimal)
+
+```yaml
+apiVersion: kranix.io/v1alpha1
+kind: KranixApp
+metadata:
+  name: api-server
+  namespace: production
+spec:
+  image: myorg/api-server:v1.4.2
+  replicas: 3
+  resources:
+    cpu: "500m"
+    memory: "512Mi"
+  rollout:
+    strategy: RollingUpdate
+    healthCheckPath: /healthz
+  autoHeal: true
+```
+
+## Install via Helm
+
+Typically deployed as part of the umbrella chart in **kranix-charts** (see the kranix-charts doc in Writing).
+
+Repository: [github.com/kranix-io/kranix-operator](https://github.com/kranix-io/kranix-operator)

@@ -1,0 +1,60 @@
+---
+title: kranix-runtime — Infrastructure Drivers
+description: Docker, Kubernetes, Podman, Compose, and remote node drivers. Core expresses what; runtime decides how.
+date: 2026-05-19
+tags: ["runtime", "docker", "kubernetes"]
+category: "Platform"
+---
+
+# kranix-runtime
+
+> Docker / Kubernetes runtime abstraction — the infrastructure driver layer.
+
+`kranix-runtime` implements the `RuntimeDriver` interface from **kranix-packages**. **kranix-core** expresses *what* should happen; runtime makes it happen on the target backend and reports observed state back.
+
+## Architecture
+
+```
+kranix-core  →  kranix-runtime  →  Docker API | Kubernetes API | Remote agents
+```
+
+Never called directly by CLI or API — only by core.
+
+## Supported backends
+
+| Backend | Status | Notes |
+|---------|--------|-------|
+| Docker (local) | Stable | Docker Engine API |
+| Kubernetes | Stable | Deployments, CronJobs, PriorityClass, NetworkPolicy |
+| Podman | Stable | Rootless, daemonless |
+| Docker Compose | Stable | Compose v1 and v2 |
+| Remote node (SSH) | Beta | Bare-metal without cluster |
+| Edge node agent | Alpha | Lightweight remote agent |
+
+## Kubernetes highlights
+
+| Concern | Behavior |
+|---------|----------|
+| **Cron** | Active `cronSchedule` → `CronJob`; else `Deployment` |
+| **Priority** | `workloadPriority` → `kranix-{critical\|high\|normal\|low}` PriorityClass |
+| **Spot** | Tolerations + eviction behavior for preemptible nodes |
+| **Cross-namespace** | NetworkPolicy from `crossNamespaceTraffic` spec |
+
+## RuntimeDriver interface
+
+```go
+type RuntimeDriver interface {
+    Deploy(ctx context.Context, spec *types.WorkloadSpec) (*types.WorkloadStatus, error)
+    Destroy(ctx context.Context, workloadID string) error
+    Restart(ctx context.Context, workloadID string) error
+    GetStatus(ctx context.Context, workloadID string) (*types.WorkloadStatus, error)
+    ListWorkloads(ctx context.Context, namespace string) ([]*types.WorkloadStatus, error)
+    StreamLogs(ctx context.Context, podID string, opts *types.LogOptions) (<-chan string, error)
+    Ping(ctx context.Context) error
+    Backend() string
+}
+```
+
+Core selects the driver from the workload `backend` field (`docker`, `kubernetes`, `podman`, etc.).
+
+Repository: [github.com/kranix-io/kranix-runtime](https://github.com/kranix-io/kranix-runtime)

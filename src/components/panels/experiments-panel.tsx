@@ -21,6 +21,8 @@ const EXPERIMENTS: Experiment[] = [
   { id: 'exp-004', title: 'Multi-Backend Deploy Abstraction', description: 'Single deploy command targeting Docker locally, Kubernetes clusters, and remote bare-metal nodes via runtime driver layer.', status: 'completed', date: '2026-04-22', category: 'Runtime', findings: 'Backend switching adds under 200ms overhead per deploy invocation.' },
   { id: 'exp-005', title: 'Dry-Run Mode for AI Agents', description: 'Preview what an MCP-connected agent would do before it acts — full diff of intended state changes.', status: 'running', date: '2026-05-14', category: 'MCP' },
   { id: 'exp-006', title: 'Progressive Delivery via CRD Flags', description: 'Canary and blue-green rollout strategies declared in KranixApp manifests without extra tooling.', status: 'planned', date: '2026-06-01', category: 'GitOps' },
+  { id: 'exp-007', title: 'Helm Production Profile', description: 'kranix-charts HA overlays — PDBs, anti-affinity, OpenTelemetry, pre-upgrade hooks.', status: 'running', date: '2026-05-19', category: 'Charts' },
+  { id: 'exp-008', title: 'Examples CI Matrix', description: 'kranix-examples tested against mock API and latest alpha-v1 release tags.', status: 'running', date: '2026-05-19', category: 'DX', findings: 'Quickstart paths complete in under 5 minutes on Docker backend.' },
 ]
 
 const STATUS_MAP: Record<Experiment['status'], { color: string, label: string, pulse: boolean }> = {

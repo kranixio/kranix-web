@@ -21,6 +21,8 @@ const GALLERY_ITEMS: GalleryItem[] = [
   { id: 'g4', title: 'TUI Live Dashboard', description: 'Real-time cluster state in the terminal via kranix status', category: 'CLI', color: 'from-amber-900/80 to-orange-600/40', aspect: 'landscape' },
   { id: 'g5', title: 'Reconciliation Loop', description: 'Desired state converging to actual state with drift detection', category: 'Core', color: 'from-red-900/80 to-yellow-600/40', aspect: 'square' },
   { id: 'g6', title: 'Multi-Backend Runtime', description: 'Same deploy command against Docker, Kubernetes, and remote nodes', category: 'Runtime', color: 'from-zinc-900/80 to-zinc-600/40', aspect: 'landscape' },
+  { id: 'g7', title: 'Helm Umbrella Chart', description: 'kranix-charts — core, api, operator, MCP in one release', category: 'Charts', color: 'from-indigo-900/80 to-violet-600/40', aspect: 'square' },
+  { id: 'g8', title: 'Examples Catalog', description: 'kranix-examples — quickstart, GitOps, AI agents, reference architectures', category: 'Examples', color: 'from-teal-900/80 to-emerald-600/40', aspect: 'landscape' },
 ]
 
 export function GalleryPanel() {

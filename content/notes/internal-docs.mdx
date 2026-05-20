@@ -21,30 +21,44 @@ Developer / AI Agent
    ▼    ▼            ▼
 runtime  operator   packages
    │
-Docker · K8s · Remote nodes
+Docker · K8s · Podman · Remote · Compose
 ```
 
-## Layer responsibilities
+## All repositories
 
-| Layer | Repo | Does |
-|-------|------|------|
-| Portal | kranix-web | This site — docs & workspace UI |
-| Clients | kranix-cli, kranix-mcp | Humans and AI agents |
-| API | kranix-api | Front door — no business logic |
-| Core | kranix-core | Brain — reconciliation & state |
-| Runtime | kranix-runtime | Infra drivers |
-| GitOps | kranix-operator | CRD reconciliation from Git |
-| Shared | kranix-packages | Types, mock API |
+| Repo | Role | Docs on this site |
+|------|------|-------------------|
+| **kranix-core** | Orchestration engine — reconciliation, state, events | `/writing/kranix-core` |
+| **kranix-api** | REST/gRPC front door | `/writing/kranix-api` |
+| **kranix-runtime** | Docker/K8s/Podman/remote drivers | `/writing/kranix-runtime` |
+| **kranix-operator** | GitOps CRDs in-cluster | `/writing/kranix-operator` |
+| **kranix-cli** | Human terminal UX | `/writing/kranix-cli` |
+| **kranix-mcp** | AI agent MCP tools | `/writing/kranix-mcp` |
+| **kranix-packages** | Shared types, SDKs, mock API | `/writing/kranix-packages` |
+| **kranix-charts** | Helm install for Kubernetes | `/writing/kranix-charts` |
+| **kranix-examples** | Runnable quickstarts & blueprints | `/writing/kranix-examples` |
+| **kranix-web** | This portal (Next.js workspace UI) | — |
 
-## Desired state sources (core)
+## Data flow
 
-1. Git — `KranixApp` manifests
-2. API — deploy/update from CLI
-3. AI — MCP tool calls (audited, scoped)
+1. **Intent** enters via Git (`KranixApp`), CLI (`kranix deploy`), or MCP (`deploy_workload`)
+2. **kranix-api** authenticates, validates, audits
+3. **kranix-core** reconciles desired vs actual state on the event bus
+4. **kranix-runtime** or **kranix-operator** applies changes to infrastructure
+5. Status and events stream back through API → CLI/MCP/SSE
 
 ## Design principles
 
 1. CLI ≡ API ≡ MCP (same capabilities, different surfaces)
-2. Git is source of truth for declared workloads
-3. Core never speaks HTTP; API never schedules workloads
-4. Composable — run MCP-only or drivers without full K8s stack
+2. Git is source of truth for declared workloads (with API/AI overlay)
+3. Core never speaks HTTP; API never schedules workloads; runtime never exposes HTTP
+4. Composable — mock API, MCP-only, drivers without full stack
+
+## Local development without full stack
+
+```bash
+# Mock API (kranix-packages)
+go run ./cmd/kranix-mock-api -addr :18080 -skip-auth=true
+
+# Or run api + core separately (see each repo README)
+```

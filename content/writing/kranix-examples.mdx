@@ -1,0 +1,58 @@
+---
+title: kranix-examples — Reference & Quickstarts
+description: Runnable examples — quickstart, AI agents, GitOps, platform engineering, observability, and production blueprints.
+date: 2026-05-19
+tags: ["examples", "quickstart", "reference"]
+category: "Guides"
+---
+
+# kranix-examples
+
+> Example projects, starter templates, and reference architectures for the Kranix ecosystem.
+
+The fastest path from zero to a working setup. Every example is self-contained with its own `README`, prerequisites, and expected output.
+
+## Repository layout
+
+```
+kranix-examples/
+├── quickstart/              # docker-hello-world, kubernetes-hello-world
+├── ai-agents/                # Claude deploy, debug, GPT ops, cost agent
+├── gitops/                   # single-app, multi-env promotion, auto-rollback
+├── platform-engineering/     # namespace-per-team, self-service, Backstage
+├── observability/            # analyze, PagerDuty oncall, log streaming
+├── local-dev/                # kind cluster, ephemeral envs, compose stack
+└── reference-architectures/  # microservices, ML inference, multi-cloud, edge
+```
+
+## Where to start
+
+| Goal | Example path |
+|------|----------------|
+| First deploy (no K8s) | `quickstart/docker-hello-world` |
+| First deploy (K8s) | `quickstart/kubernetes-hello-world` |
+| Claude + MCP | `ai-agents/claude-deploy-app` |
+| GitOps loop | `gitops/single-app-gitops` |
+| IDP self-service | `platform-engineering/self-service-deploy` |
+| Failure analysis | `observability/ai-failure-analysis` |
+| Full platform | `reference-architectures/microservices-platform` |
+
+## Clone and run
+
+```bash
+git clone https://github.com/kranix-io/kranix-examples
+cd kranix-examples/quickstart/docker-hello-world
+# Follow README.md in each directory
+```
+
+## What you'll use per area
+
+| Area | Typical components |
+|------|-------------------|
+| Quickstart | kranix-cli, kranix-runtime (Docker) |
+| AI agents | kranix-mcp, kranix-api |
+| GitOps | kranix-operator, KranixApp CRDs |
+| Observability | kranix-cli analyze, kranix-api SSE |
+| Local dev | kranix-charts, kind |
+
+Repository: [github.com/kranix-io/kranix-examples](https://github.com/kranix-io/kranix-examples)
