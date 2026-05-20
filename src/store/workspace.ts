@@ -22,15 +22,24 @@ export const PANEL_CONFIG: Record<PanelId, { label: string, icon: string }> = {
   settings: { label: 'Settings', icon: 'gear' },
 }
 
+export interface WorkspaceToast {
+  title: string
+  message?: string
+  type?: 'info' | 'success'
+  duration?: number
+}
+
 interface WorkspaceState {
   openTabs: string[]
   sidebarOpen: boolean
   bottomPanelOpen: boolean
   bottomPanelHeight: number
   commandPaletteOpen: boolean
+  shortcutsOpen: boolean
   sidebarWidth: number
   sidebarPosition: 'left' | 'right'
   themePreset: ThemePresetId
+  toast: WorkspaceToast | null
 
   openTab: (id: string) => void
   closeTab: (id: string) => void
@@ -44,6 +53,10 @@ interface WorkspaceState {
   setCommandPaletteOpen: (open: boolean) => void
   setSidebarWidth: (w: number) => void
   setThemePreset: (preset: ThemePresetId) => void
+  showToast: (toast: WorkspaceToast) => void
+  clearToast: () => void
+  setShortcutsOpen: (open: boolean) => void
+  toggleShortcuts: () => void
   setOpenTabs: (tabs: string[]) => void
   closeAllTabs: () => void
   closeOtherTabs: (id: string) => void
@@ -57,6 +70,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     : false,
   bottomPanelHeight: 200,
   commandPaletteOpen: false,
+  shortcutsOpen: false,
+  toast: null,
   sidebarWidth: 220,
   sidebarPosition: 'left',
   themePreset: (() => {
@@ -110,6 +125,10 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       document.documentElement.setAttribute('data-theme', preset)
     }
   },
+  showToast: toast => set({ toast }),
+  clearToast: () => set({ toast: null }),
+  setShortcutsOpen: open => set({ shortcutsOpen: open }),
+  toggleShortcuts: () => set(s => ({ shortcutsOpen: !s.shortcutsOpen })),
   setOpenTabs: tabs => set({ openTabs: tabs }),
   closeAllTabs: () => {
     set({ openTabs: ['overview'] })

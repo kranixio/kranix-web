@@ -138,6 +138,7 @@ const commands: Record<string, CommandHandler> = {
       createLine('output', '│  theme <n>   │  Switch to a theme            │'),
       createLine('output', '│  pet         │  Visit your terminal pet      │'),
       createLine('output', '│  whoami      │  Display platform profile     │'),
+      createLine('output', '│  status      │  Control plane health         │'),
       createLine('output', '│  neofetch    │  System info summary          │'),
       createLine('output', '│  echo <msg>  │  Print a message              │'),
       createLine('output', '│  date        │  Show current date & time     │'),
@@ -206,6 +207,22 @@ const commands: Record<string, CommandHandler> = {
       createLine('output', '  license:  Apache 2.0'),
       createLine('output', '  stack:    Go / Kubernetes / MCP'),
       createLine('output', '  status:   alpha-v1 — built in public'),
+    ])
+  },
+
+  status: (_args, ctx) => {
+    const now = new Date().toISOString()
+    ctx.addLines([
+      createLine('output', ''),
+      createLine('output', '  Control plane status'),
+      createLine('output', '  ─────────────────────────────────'),
+      createLine('output', '  reconciler:     online'),
+      createLine('output', '  mcp server:     ready'),
+      createLine('output', '  gitops sync:    idle'),
+      createLine('output', '  workloads:      24 active (simulated)'),
+      createLine('output', '  release:        alpha-v1'),
+      createLine('output', `  checked at:     ${now}`),
+      createLine('output', ''),
     ])
   },
 

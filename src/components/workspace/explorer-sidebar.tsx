@@ -228,10 +228,13 @@ export function ExplorerSidebar() {
       </nav>
 
       {/* Sidebar footer: status */}
-      <div className="border-t border-os-border px-3 py-2">
+      <div className="space-y-1 border-t border-os-border px-3 py-2">
         <div className="flex items-center gap-2 font-mono text-[10px] text-muted-foreground">
-          <div className="size-1.5 rounded-full bg-os-indicator animate-pulse" />
-          <span>system active</span>
+          <div className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span>reconciler online</span>
+        </div>
+        <div className="font-mono text-[9px] text-muted-foreground/80">
+          MCP ready · alpha-v1
         </div>
       </div>
     </aside>

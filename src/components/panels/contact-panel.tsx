@@ -39,6 +39,15 @@ export function ContactPanel() {
           <p className="mt-1 font-mono text-[11px] text-muted-foreground">Contribute, discuss ideas, or get help with Kranix IO.</p>
         </div>
 
+        <div className="rounded-sm border border-os-border bg-os-terminal-bg p-4 font-mono text-[10px]">
+          <div className="text-muted-foreground/70">// quick start</div>
+          <div className="mt-2 space-y-1.5 text-os-terminal-fg">
+            <div><span className="text-os-accent">$</span> curl -fsSL https://get.kranix.io | sh</div>
+            <div><span className="text-os-accent">$</span> kranix init</div>
+            <div><span className="text-os-accent">$</span> kranix deploy --from git</div>
+          </div>
+        </div>
+
         {/* Contact links */}
         <div className="space-y-2">
           <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">CHANNELS</div>

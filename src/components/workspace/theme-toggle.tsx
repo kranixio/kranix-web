@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import { useWorkspaceStore } from '@/store/workspace'
 
 export function ThemeToggle() {
-  const { themePreset, setThemePreset } = useWorkspaceStore()
+  const { themePreset, setThemePreset, showToast } = useWorkspaceStore()
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
 
@@ -74,6 +74,11 @@ export function ThemeToggle() {
                 value={themePreset}
                 onChange={(id: ThemePresetId) => {
                   setThemePreset(id)
+                  showToast({
+                    title: 'Theme updated',
+                    message: getThemePresetLabel(id),
+                    type: 'success',
+                  })
                   setOpen(false)
                 }}
               />

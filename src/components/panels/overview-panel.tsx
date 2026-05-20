@@ -15,6 +15,8 @@ import {
 import { motion } from 'motion/react'
 import Link from 'next/link'
 
+import { CapabilityHighlights } from '@/components/panels/capability-highlights'
+import { OverviewLiveMetrics } from '@/components/panels/overview-live-metrics'
 import { useWorkspaceStore } from '@/store/workspace'
 
 function StatusBadge({ label, value, color }: { label: string, value: string, color: string }) {
@@ -182,6 +184,10 @@ export function OverviewPanel({ recentWritings = [] }: OverviewPanelProps) {
         </div>
 
         <HeroSection />
+
+        <CapabilityHighlights />
+
+        <OverviewLiveMetrics />
 
         {/* Status Grid */}
         <div>

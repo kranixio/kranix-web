@@ -9,8 +9,11 @@ import {
   GearIcon,
   HouseIcon,
   ImagesIcon,
+  KeyboardIcon,
   MagnifyingGlassIcon,
   NotepadIcon,
+  PaletteIcon,
+  TerminalIcon,
   XIcon,
 } from '@phosphor-icons/react'
 import { AnimatePresence, motion } from 'motion/react'
@@ -31,58 +34,147 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number, weight?: 're
   activity: ActivityIcon,
   envelope: EnvelopeIcon,
   gear: GearIcon,
+  terminal: TerminalIcon,
+  palette: PaletteIcon,
+  keyboard: KeyboardIcon,
+}
+
+const DOC_LINKS = [
+  { id: 'doc-start', label: 'Getting Started', path: '/writing/hello-world', keywords: ['install', 'deploy'] },
+  { id: 'doc-core', label: 'kranix-core', path: '/writing/kranix-core', keywords: ['reconciler'] },
+  { id: 'doc-api', label: 'kranix-api', path: '/writing/kranix-api', keywords: ['rest', 'grpc'] },
+  { id: 'doc-mcp', label: 'kranix-mcp', path: '/writing/kranix-mcp', keywords: ['ai', 'claude'] },
+  { id: 'doc-cli', label: 'kranix-cli', path: '/writing/kranix-cli', keywords: ['terminal'] },
+]
+
+interface CommandItem {
+  id: string
+  label: string
+  section: string
+  icon: string
+  keywords: string[]
+  action: () => void
 }
 
 export function CommandPalette() {
-  const { commandPaletteOpen, setCommandPaletteOpen, openTab } = useWorkspaceStore()
+  const {
+    commandPaletteOpen,
+    setCommandPaletteOpen,
+    openTab,
+    toggleBottomPanel,
+    setShortcutsOpen,
+  } = useWorkspaceStore()
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const isMobile = useIsMobile()
 
-  const allItems = useMemo(() => {
-    return (Object.entries(PANEL_CONFIG)).map(([id, config]) => ({
-      id,
+  const allItems = useMemo((): CommandItem[] => {
+    const navigate = Object.entries(PANEL_CONFIG).map(([id, config]) => ({
+      id: `nav-${id}`,
       label: config.label,
+      section: 'Navigate',
       icon: config.icon,
+      keywords: [id, config.label],
       action: () => {
         openTab(id)
         router.push(`/${id}`)
         setCommandPaletteOpen(false)
       },
     }))
-  }, [openTab, router, setCommandPaletteOpen])
+
+    const actions: CommandItem[] = [
+      {
+        id: 'act-terminal',
+        label: 'Toggle terminal',
+        section: 'Actions',
+        icon: 'terminal',
+        keywords: ['shell', 'kranix-sh'],
+        action: () => {
+          toggleBottomPanel()
+          setCommandPaletteOpen(false)
+        },
+      },
+      {
+        id: 'act-settings',
+        label: 'Open settings',
+        section: 'Actions',
+        icon: 'gear',
+        keywords: ['theme', 'preferences'],
+        action: () => {
+          openTab('settings')
+          router.push('/settings')
+          setCommandPaletteOpen(false)
+        },
+      },
+      {
+        id: 'act-shortcuts',
+        label: 'Keyboard shortcuts',
+        section: 'Actions',
+        icon: 'keyboard',
+        keywords: ['help', 'keys'],
+        action: () => {
+          setShortcutsOpen(true)
+          setCommandPaletteOpen(false)
+        },
+      },
+      {
+        id: 'act-theme',
+        label: 'Workspace theme picker',
+        section: 'Actions',
+        icon: 'palette',
+        keywords: ['appearance', 'linen', 'graphite'],
+        action: () => {
+          openTab('settings')
+          router.push('/settings')
+          setCommandPaletteOpen(false)
+        },
+      },
+    ]
+
+    const docs = DOC_LINKS.map(doc => ({
+      id: doc.id,
+      label: doc.label,
+      section: 'Documentation',
+      icon: 'article',
+      keywords: [doc.label, ...doc.keywords, doc.path],
+      action: () => {
+        openTab('writing')
+        router.push(doc.path)
+        setCommandPaletteOpen(false)
+      },
+    }))
+
+    return [...navigate, ...actions, ...docs]
+  }, [openTab, router, setCommandPaletteOpen, toggleBottomPanel, setShortcutsOpen])
 
   const filteredItems = useMemo(() => {
-    if (!query)
+    const q = query.trim().toLowerCase()
+    if (!q)
       return allItems
     return allItems.filter(item =>
-      item.label.toLowerCase().includes(query.toLowerCase()),
+      item.label.toLowerCase().includes(q)
+      || item.keywords.some(k => k.toLowerCase().includes(q)),
     )
   }, [query, allItems])
 
-  // Reset selected index when filtered items change
+  const sections = useMemo(() => {
+    const order = ['Navigate', 'Actions', 'Documentation']
+    return order
+      .map(name => ({
+        name,
+        items: filteredItems.filter(i => i.section === name),
+      }))
+      .filter(s => s.items.length > 0)
+  }, [filteredItems])
+
+  const flatItems = useMemo(() => sections.flatMap(s => s.items), [sections])
+
   useEffect(() => {
     setSelectedIndex(0)
   }, [filteredItems])
 
-  // Keyboard shortcut to open
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        setCommandPaletteOpen(!commandPaletteOpen)
-      }
-      if (e.key === 'Escape') {
-        setCommandPaletteOpen(false)
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [commandPaletteOpen, setCommandPaletteOpen])
-
-  // Focus input when open
   useEffect(() => {
     if (commandPaletteOpen) {
       setQuery('')
@@ -94,7 +186,7 @@ export function CommandPalette() {
     (e: React.KeyboardEvent) => {
       if (e.key === 'ArrowDown') {
         e.preventDefault()
-        setSelectedIndex(i => Math.min(i + 1, filteredItems.length - 1))
+        setSelectedIndex(i => Math.min(i + 1, flatItems.length - 1))
       }
       else if (e.key === 'ArrowUp') {
         e.preventDefault()
@@ -102,17 +194,21 @@ export function CommandPalette() {
       }
       else if (e.key === 'Enter') {
         e.preventDefault()
-        filteredItems[selectedIndex]?.action()
+        flatItems[selectedIndex]?.action()
+      }
+      else if (e.key === 'Escape') {
+        setCommandPaletteOpen(false)
       }
     },
-    [filteredItems, selectedIndex],
+    [flatItems, selectedIndex, setCommandPaletteOpen],
   )
+
+  let flatIndex = -1
 
   return (
     <AnimatePresence>
       {commandPaletteOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -122,27 +218,19 @@ export function CommandPalette() {
             onClick={() => setCommandPaletteOpen(false)}
           />
 
-          {/* Palette */}
           <motion.div
             id="command-palette"
-            initial={isMobile
-              ? { opacity: 0, y: 40 }
-              : { opacity: 0, y: -20, scale: 0.98 }}
-            animate={isMobile
-              ? { opacity: 1, y: 0 }
-              : { opacity: 1, y: 0, scale: 1 }}
-            exit={isMobile
-              ? { opacity: 0, y: 40 }
-              : { opacity: 0, y: -20, scale: 0.98 }}
+            initial={isMobile ? { opacity: 0, y: 40 } : { opacity: 0, y: -20, scale: 0.98 }}
+            animate={isMobile ? { opacity: 1, y: 0 } : { opacity: 1, y: 0, scale: 1 }}
+            exit={isMobile ? { opacity: 0, y: 40 } : { opacity: 0, y: -20, scale: 0.98 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
             className={cn(
               'fixed z-50 overflow-hidden bg-os-panel shadow-2xl',
               isMobile
                 ? 'inset-0 flex flex-col'
-                : 'left-1/2 top-[20%] w-full max-w-lg -translate-x-1/2 rounded-lg border border-os-border',
+                : 'left-1/2 top-[15%] w-full max-w-lg -translate-x-1/2 rounded-sm border border-os-border',
             )}
           >
-            {/* Search input */}
             <div className={cn(
               'flex items-center gap-2 border-b border-os-border',
               isMobile ? 'px-4 py-4' : 'px-4 py-3',
@@ -155,7 +243,7 @@ export function CommandPalette() {
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Type a command or search..."
+                placeholder="Search panels, docs, actions..."
                 className={cn(
                   'flex-1 bg-transparent font-mono text-foreground outline-none placeholder:text-muted-foreground/60',
                   isMobile ? 'text-sm' : 'text-xs',
@@ -163,10 +251,7 @@ export function CommandPalette() {
               />
               {isMobile
                 ? (
-                    <button
-                      onClick={() => setCommandPaletteOpen(false)}
-                      className="flex size-8 items-center justify-center rounded-sm text-muted-foreground active:bg-os-accent-muted"
-                    >
+                    <button type="button" onClick={() => setCommandPaletteOpen(false)} className="flex size-8 items-center justify-center rounded-sm text-muted-foreground active:bg-os-accent-muted">
                       <XIcon size={18} weight="bold" />
                     </button>
                   )
@@ -177,64 +262,56 @@ export function CommandPalette() {
                   )}
             </div>
 
-            {/* Results */}
-            <div className={cn(
-              'overflow-y-auto',
-              isMobile ? 'flex-1 p-3' : 'max-h-72 p-2',
-            )}
-            >
-              <div className={cn(
-                'mb-1 px-2 font-mono font-semibold tracking-wider text-muted-foreground',
-                isMobile ? 'text-[11px]' : 'text-[10px]',
-              )}
-              >
-                NAVIGATE
-              </div>
-              {filteredItems.length === 0 && (
+            <div className={cn('os-scrollbar overflow-y-auto', isMobile ? 'flex-1 p-3' : 'max-h-80 p-2')}>
+              {flatItems.length === 0 && (
                 <div className="px-2 py-4 text-center font-mono text-xs text-muted-foreground">
                   No results found
                 </div>
               )}
-              {filteredItems.map((item, index) => {
-                const Icon = ICON_MAP[item.icon]
-                const isSelected = index === selectedIndex
-                return (
-                  <button
-                    key={item.id}
-                    onClick={item.action}
-                    onMouseEnter={() => setSelectedIndex(index)}
-                    className={cn(
-                      'flex w-full items-center text-xs gap-3 rounded-sm text-left transition-colors',
-                      isMobile ? 'px-3 py-3.5' : 'px-2 py-2',
-                      isSelected
-                        ? 'bg-os-accent-muted text-foreground'
-                        : 'text-muted-foreground hover:text-foreground',
-                    )}
+              {sections.map(section => (
+                <div key={section.name} className="mb-2">
+                  <div className={cn(
+                    'mb-1 px-2 font-mono font-semibold uppercase tracking-widest text-muted-foreground',
+                    isMobile ? 'text-[11px]' : 'text-[10px]',
+                  )}
                   >
-                    {Icon && <Icon size={isMobile ? 18 : 16} weight={isSelected ? 'fill' : 'regular'} />}
-                    <span>{item.label}</span>
-                    {isSelected && !isMobile && (
-                      <span className="ml-auto font-mono text-[10px] text-os-accent">↵</span>
-                    )}
-                  </button>
-                )
-              })}
+                    {section.name}
+                  </div>
+                  {section.items.map((item) => {
+                    flatIndex += 1
+                    const idx = flatIndex
+                    const Icon = ICON_MAP[item.icon]
+                    const isSelected = idx === selectedIndex
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={item.action}
+                        onMouseEnter={() => setSelectedIndex(idx)}
+                        className={cn(
+                          'flex w-full items-center gap-3 rounded-sm text-left text-xs transition-colors',
+                          isMobile ? 'px-3 py-3' : 'px-2 py-2',
+                          isSelected
+                            ? 'bg-os-accent-muted text-foreground'
+                            : 'text-muted-foreground hover:text-foreground',
+                        )}
+                      >
+                        {Icon && <Icon size={isMobile ? 18 : 16} weight={isSelected ? 'fill' : 'regular'} />}
+                        <span>{item.label}</span>
+                        {isSelected && !isMobile && (
+                          <span className="ml-auto font-mono text-[10px] text-os-accent">↵</span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              ))}
             </div>
 
-            {/* Footer — desktop only */}
             {!isMobile && (
-              <div className="flex items-center text-xs justify-between border-t border-os-border px-4 py-2">
-                <div className="flex items-center gap-3 font-mono text-[10px] text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <kbd className="rounded border border-os-border bg-background px-1 py-0.5 text-[9px]">↑</kbd>
-                    <kbd className="rounded border border-os-border bg-background px-1 py-0.5 text-[9px]">↓</kbd>
-                    navigate
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <kbd className="rounded border border-os-border bg-background px-1 py-0.5 text-[9px]">↵</kbd>
-                    select
-                  </span>
-                </div>
+              <div className="flex items-center justify-between border-t border-os-border px-4 py-2 font-mono text-[10px] text-muted-foreground">
+                <span>↑↓ navigate · ↵ select · ? shortcuts</span>
+                <span>⌘K</span>
               </div>
             )}
           </motion.div>

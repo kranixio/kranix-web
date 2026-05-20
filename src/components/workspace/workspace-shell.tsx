@@ -4,9 +4,12 @@ import { useEffect } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
 import { useIsMobile } from '@/lib/use-mobile'
 import { useWorkspaceStore } from '@/store/workspace'
+import { WorkspaceToast } from '@/components/ui/workspace-toast'
+import { useWorkspaceShortcuts } from '@/hooks/use-workspace-shortcuts'
 import { BottomPanel } from './bottom-panel'
 import { CommandPalette } from './command-palette'
 import { ExplorerSidebar } from './explorer-sidebar'
+import { KeyboardShortcutsModal } from './keyboard-shortcuts'
 import { StatusBar } from './status-bar'
 import { TabBar } from './tab-bar'
 import { Toolbar } from './toolbar'
@@ -55,6 +58,8 @@ function MobileLayout({ children }: { children: React.ReactNode }) {
       <WorkspaceContent>{children}</WorkspaceContent>
       <StatusBar />
       <CommandPalette />
+      <KeyboardShortcutsModal />
+      <WorkspaceToast />
     </div>
   )
 }
@@ -136,6 +141,8 @@ function DesktopLayout({ children }: { children: React.ReactNode }) {
 
       {/* Command Palette Overlay */}
       <CommandPalette />
+      <KeyboardShortcutsModal />
+      <WorkspaceToast />
     </div>
   )
 }
@@ -143,6 +150,8 @@ function DesktopLayout({ children }: { children: React.ReactNode }) {
 export function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const { themePreset } = useWorkspaceStore()
   const isMobile = useIsMobile()
+
+  useWorkspaceShortcuts()
 
   // Sync theme preset with DOM
   useEffect(() => {

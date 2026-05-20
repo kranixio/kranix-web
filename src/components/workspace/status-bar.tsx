@@ -1,13 +1,14 @@
 /* eslint-disable node/prefer-global/process */
 'use client'
 
-import { CheckCircleIcon, CodeIcon, GitBranchIcon } from '@phosphor-icons/react'
+import { CheckCircleIcon, CodeIcon, GitBranchIcon, KeyboardIcon } from '@phosphor-icons/react'
 import { usePathname } from 'next/navigation'
 import { useIsMobile } from '@/lib/use-mobile'
-import { PANEL_CONFIG } from '@/store/workspace'
+import { PANEL_CONFIG, useWorkspaceStore } from '@/store/workspace'
 
 export function StatusBar() {
   const pathname = usePathname()
+  const { setShortcutsOpen } = useWorkspaceStore()
   const activePanel = pathname.split('/')[1] || 'overview'
   const config = PANEL_CONFIG[activePanel as keyof typeof PANEL_CONFIG] || PANEL_CONFIG.overview
   const isMobile = useIsMobile()
@@ -42,12 +43,28 @@ export function StatusBar() {
           <GitBranchIcon size={11} />
           alpha-v1
         </span>
+        <span className="flex items-center gap-1.5">
+          <span className="relative flex size-1.5">
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-50" />
+            <span className="relative inline-flex size-1.5 rounded-full bg-emerald-400" />
+          </span>
+          reconciler online
+        </span>
         <span className="flex items-center gap-1">
           <CheckCircleIcon size={11} className="text-emerald-400" />
           0 issues
         </span>
       </div>
       <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setShortcutsOpen(true)}
+          className="flex items-center gap-1 transition-colors hover:text-foreground"
+          title="Keyboard shortcuts"
+        >
+          <KeyboardIcon size={11} />
+          ?
+        </button>
         <span className="flex items-center gap-1">
           <CodeIcon size={11} />
           {config.label}
